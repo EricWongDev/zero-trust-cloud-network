@@ -10,7 +10,7 @@ module "prod_spoke_vpc" {
   private_subnets = ["10.1.1.0/24", "10.1.2.0/24"]
 
   # No public internet access directly from this VPC
-  enable_nat_gateway = false 
+  enable_nat_gateway = false
   enable_vpn_gateway = false
 
   tags = {
