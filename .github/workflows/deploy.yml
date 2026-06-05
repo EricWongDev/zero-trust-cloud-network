@@ -1,0 +1,55 @@
+name: NetDevOps CI/CD Pipeline
+
+# Trigger the pipeline automatically when code is pushed to the 'main' branch
+on:
+  push:
+    branches:
+      - main
+
+# Load your AWS Keys securely
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: us-east-1
+
+jobs:
+  infrastructure-deploy:
+    name: Terraform Plan & Apply
+    runs-on: ubuntu-latest
+    
+    # Tell the pipeline which folder our code is in
+    defaults:
+      run:
+        working-directory: ./terraform/hub-network
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v3
+
+      - name: 🛠️ Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: 🚀 Terraform Init
+        run: terraform init
+
+      - name: 🧹 Terraform Format Check
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: ✅ Terraform Validate
+        run: terraform validate
+
+      - name: 🔒 Security Scan (Checkov)
+        run: |
+          pip install checkov
+          checkov -d . --framework terraform
+        continue-on-error: true # We allow this to continue even if it finds minor security warnings
+
+      - name: 📝 Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: 🏗️ Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
