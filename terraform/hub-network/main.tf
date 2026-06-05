@@ -1,5 +1,5 @@
 module "hub_vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0" # <-- ADD THIS EXACT LINE
 
   name = "hub-vpc-production"
